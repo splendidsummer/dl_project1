@@ -39,3 +39,5 @@ def read_csv():
 def explore_data():
     pass
 
+import tensorflow as tf
+base_model = tf.keras.applications.ResNet152(weights = 'imagenet', include_top = False, input_shape = (32,32,3))
