@@ -28,15 +28,16 @@ model.add(Conv2D(128, kernel_size=(3, 3), activation='relu', kernel_initializer=
 model.add(MaxPooling2D(pool_size=(2, 2)))
 
 model.add(Flatten())
-model.add(Dense(512, activation='relu'))
+model.add(Dense(512))
 model.add(Dense(29))
 
-
 sweep_id = wandb.sweep(sweep=configs.sweep_configuration, project="sweeps_projects")
-wandb.agent(sweep_id=sweep_id, function=onerun)
+
 
 def onerun():
-    wandb.init(project='my_first_sweep')
+    wandb.init(
+        project='my_first_sweep',
+    )
     config = wandb.config
     lr = config.learning_rate
     epochs = config.epochs
@@ -61,11 +62,17 @@ def onerun():
                       restore_best_weights=True)
     wandb_callback = WandbCallback()
 
+    print('Starting training!!')
+
     history = model.fit(X_train,
                         validation_data=X_val,
                         epochs=epochs,
-                        # callbacks=[early_callback, wandb_callback],  # other callback?
+                        callbacks=[early_callback, wandb_callback],
                         )
+
+
+wandb.agent(sweep_id=sweep_id, function=onerun)
+
 
 
 

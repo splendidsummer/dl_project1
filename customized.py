@@ -20,7 +20,7 @@ class RandomInvert(layers.Layer):
 
 
 class RandomGray(layers.Layer):
-    def __init__(self, p=configs.random_ratio, **kwargs):
+    def __init__(self, p=configs.augment_config['random_ratio'], **kwargs):
         super().__init__(**kwargs)
         self.prob = p
 
