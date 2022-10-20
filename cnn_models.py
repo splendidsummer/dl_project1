@@ -12,18 +12,18 @@ from customized import *
 
 data_augmentation = Sequential(
   [
-    layers.Resizing(configs.augment_config['img_resize'], configs.augment_config['img_resize']),
-    layers.RandomFlip("horizontal"),
-    layers.RandomFlip("vertical"),
+    # layers.Resizing(configs.augment_config['img_resize'], configs.augment_config['img_resize']),
+    # layers.RandomFlip("horizontal"),
+    # layers.RandomFlip("vertical"),
     layers.RandomFlip("horizontal_and_vertical"),
 
     layers.RandomRotation(configs.augment_config['random_ratio']),
-    layers.CenterCrop(configs.augment_config['img_crop'], configs.augment_config['img_crop']),
-    layers.RandomZoom(configs.augment_config['random_ratio']),
+    # layers.CenterCrop(configs.augment_config['img_crop'], configs.augment_config['img_crop']),
+    # layers.RandomZoom(configs.augment_config['random_ratio']),
     # layers.RandomBrightness(configs.img_factor),
-    layers.RandomContrast(configs.augment_config['img_factor']),
-    layers.RandomTranslation(configs.augment_config['img_factor'], configs.augment_config['img_factor']),
-    RandomGray(configs.augment_config['random_ratio']),
+    # layers.RandomContrast(configs.augment_config['img_factor']),
+    # layers.RandomTranslation(configs.augment_config['img_factor'], configs.augment_config['img_factor']),
+    # RandomGray(configs.augment_config['random_ratio']),
   ]
 )
 
@@ -166,12 +166,12 @@ def cbr_model5_bottleneck():
         # layers.Resizing(configs.img_resize, configs.img_resize),
         layers.Rescaling(1. / 255),
 
-        layers.Conv2D(16, 7, padding='same', activation='relu', kernel_initializer='he_normal'),
+        layers.Conv2D(16, 3, padding='same', activation='relu', kernel_initializer='he_normal'),
         layers.BatchNormalization(),
         layers.ReLU(),
         layers.MaxPooling2D(),
 
-        layers.Conv2D(32, 5, padding='same', activation='relu', kernel_initializer='he_normal'),
+        layers.Conv2D(32, 3, padding='same', activation='relu', kernel_initializer='he_normal'),
         layers.BatchNormalization(),
         layers.ReLU(),
         layers.MaxPooling2D(),
@@ -209,7 +209,8 @@ def cbr5_activation_bottleneck(config):
     """
     model = Sequential([
         layers.InputLayer(input_shape=configs.input_shape),
-        # data_augmentation,
+
+        data_augmentation,
         # layers.Resizing(configs.img_resize, configs.img_resize),
         layers.Rescaling(1. / 255),
 
@@ -256,19 +257,56 @@ def cbr5_activation_3333(config):
     """
     model = Sequential([
         layers.InputLayer(input_shape=configs.input_shape),
-        # data_augmentation,
+        data_augmentation,
         # layers.Resizing(configs.img_resize, configs.img_resize),
         layers.Rescaling(1. / 255),
-
-        layers.Conv2D(16, 3, padding='same', activation=config.activation, kernel_initializer=config.initialization),
-        layers.BatchNormalization(),
-        layers.ReLU(),
-        layers.MaxPooling2D(),
 
         layers.Conv2D(32, 3, padding='same', activation=config.activation, kernel_initializer=config.initialization),
         layers.BatchNormalization(),
         layers.ReLU(),
         layers.MaxPooling2D(),
+
+        layers.Dropout(configs.wandb_config['drop_rate']),
+
+        layers.Conv2D(64, 3, padding='same', activation=config.activation, kernel_initializer=config.initialization),
+        layers.BatchNormalization(),
+        layers.ReLU(),
+        layers.MaxPooling2D(),
+
+        layers.Dropout(configs.wandb_config['drop_rate']),
+
+        layers.Conv2D(128, 3, padding='same', activation=config.activation, kernel_initializer=config.initialization),
+        layers.BatchNormalization(),
+        layers.ReLU(),
+        layers.MaxPooling2D(),
+
+        layers.Dropout(configs.wandb_config['drop_rate']),
+
+        layers.Conv2D(256, 1, padding='same', activation=config.activation, kernel_initializer=config.initialization),
+        layers.BatchNormalization(),
+        layers.ReLU(),
+        layers.MaxPooling2D(),
+
+        layers.Flatten(),
+
+        layers.Dense(512, activation='relu'),
+        layers.Dropout(configs.wandb_config['drop_rate']),
+        layers.Dense(len(configs.data_classes)),
+    ])
+
+    return model
+
+def vgg11(config):
+    """
+    network architecture summary:
+        1.
+    :return:
+    """
+    model = Sequential([
+        layers.InputLayer(input_shape=configs.input_shape),
+        # data_augmentation,
+        # layers.Resizing(configs.img_resize, configs.img_resize),
+        layers.Rescaling(1. / 255),
 
         layers.Conv2D(64, 3, padding='same', activation=config.activation, kernel_initializer=config.initialization),
         layers.BatchNormalization(),
@@ -280,15 +318,34 @@ def cbr5_activation_3333(config):
         layers.ReLU(),
         layers.MaxPooling2D(),
 
-        layers.Conv2D(256, 1, padding='same', activation=config.activation, kernel_initializer=config.initialization),
+        layers.Conv2D(256, 3, padding='same', activation=config.activation, kernel_initializer=config.initialization),
         layers.BatchNormalization(),
         layers.ReLU(),
+
+        layers.Conv2D(256, 3, padding='same', activation=config.activation, kernel_initializer=config.initialization),
+        layers.BatchNormalization(),
+        layers.ReLU(),
+
         layers.MaxPooling2D(),
 
-        layers.Dropout(configs.wandb_config['drop_rate']),
+        layers.Conv2D(512, 3, padding='same', activation=config.activation, kernel_initializer=config.initialization),
+        layers.BatchNormalization(),
+        layers.ReLU(),
+
+        layers.Conv2D(512, 3, padding='same', activation=config.activation, kernel_initializer=config.initialization),
+        layers.BatchNormalization(),
+        layers.ReLU(),
+
+        layers.MaxPooling2D(),
+
         layers.Flatten(),
 
-        layers.Dense(512, activation='relu'),
+        layers.Dense(1024, activation='relu'),
+        layers.Dropout(configs.wandb_config['drop_rate']),
+
+        layers.Dense(1024, activation='relu'),
+        layers.Dropout(configs.wandb_config['drop_rate']),
+
         layers.Dense(len(configs.data_classes)),
     ])
 
@@ -827,114 +884,13 @@ class Linear(tf.keras.Model):
        return output
 
 
-def _skip_block(inputs, num_filter):
-    x = inputs
-    if inputs.shape[-1] != num_filter:
-        x = layers.Conv2D(num_filter, 1, padding='same', kernel_initializer='he_normal')(inputs)
-    # x = layers.Conv2D(num_filter, 1,  padding='same', kernel_initializer='he_normal')(inputs)
-    y = layers.Conv2D(num_filter, 1, padding='same', kernel_initializer='he_normal')(inputs)
-    y = layers.Conv2D(num_filter, 3, padding='same', kernel_initializer='he_normal')(y)
-    y = layers.Conv2D(num_filter, 1, padding='same', kernel_initializer='he_normal')(y)
-
-    out = Add()([x, y])
-    return out
-
-
-def _skip_block2(inputs, num_filter):
-    x = inputs
-    if inputs.shape[-1] != num_filter:
-        x = layers.Conv2D(num_filter, 1, padding='same', kernel_initializer='he_normal')(inputs)
-    # x = layers.Conv2D(num_filter, 1,  padding='same', kernel_initializer='he_normal')(inputs)
-    y = layers.Conv2D(num_filter, 1, padding='same', kernel_initializer='he_normal')(inputs)
-    y = layers.Conv2D(num_filter, 3, padding='same', kernel_initializer='he_normal')(y)
-    y = layers.Conv2D(num_filter, 1, padding='same', kernel_initializer='he_normal')(y)
-
-    out = Add()([x, y])
-    return out
-
-
-class VannilaSikpModel(tf.keras.Model):
-    def __init__(self, config, num_classes=29):
-        super(VannilaSikpModel, self).__init__()
-        self.conv0 = layers.Conv2D(64, 3, padding='same', kernel_initializer='he_normal', input_shape=(256, 256, 3))
-        self.conv11 = layers.Conv2D(64, 1, padding='same', kernel_initializer='he_normal')
-        self.conv12 = layers.Conv2D(64, 3, padding='same', kernel_initializer='he_normal')
-        self.conv13 = layers.Conv2D(64, 1, padding='same', kernel_initializer='he_normal')
-        self.maxpool1 = layers.MaxPooling2D()
-        self.add1 = layers.Add()
-
-        self.conv20 = layers.Conv2D(128, 1, padding='same', kernel_initializer='he_normal')
-        self.conv21 = layers.Conv2D(128, 1, padding='same', kernel_initializer='he_normal')
-        self.conv22 = layers.Conv2D(128, 3, padding='same', kernel_initializer='he_normal')
-        self.conv23 = layers.Conv2D(128, 1, padding='same', kernel_initializer='he_normal')
-        self.maxpool2 = layers.MaxPooling2D()
-        self.add2 = layers.Add()
-
-        self.dropout = layers.Dropout(configs.wandb_config['drop_rate'])
-        self.flatten = layers.Flatten()
-        self.dense = layers.Dense(512, activation='relu')
-
-    def call(self, inputs):
-        x = self.conv0(inputs)
-        out = self.conv11(x)
-        out = self.conv12(out)
-        out = self.conv13(out)
-        out = self.add1([x, out])
-        out = self.maxpool1(out)
-
-        x = self.conv20(out)
-
-        out = self.conv21(x)
-        out = self.conv22(out)
-        out = self.conv23(out)
-        out = self.add2([x, out])
-        out = self.maxpool2(out)
-
-        out = self.flatten(self.dropout(out))
-        out = self.dense(out)
-
-        return out
-
-
-#     def identity_block(input_tensor, kernel_size, filters, stage, block):
-#         """The identity block is the block that has no conv layer at shortcut.
-#         # Arguments
-#             input_tensor: input tensor
-#             kernel_size: default 3, the kernel size of
-#                 middle conv layer at main path
-#             filters: list of integers, the filters of 3 conv layer at main path
-#             stage: integer, current stage label, used for generating layer names
-#             block: 'a','b'..., current block label, used for generating layer names
-#         # Returns
-#             Output tensor for the block.
-#         """
-#         filters1, filters2, filters3 = filters
-#         if backend.image_data_format() == 'channels_last':
-#             bn_axis = 3
-#         else:
-#             bn_axis = 1
-#         conv_name_base = 'res' + str(stage) + block + '_branch'
-#         bn_name_base = 'bn' + str(stage) + block + '_branch'
-#
-#         x = layers.Conv2D(filters1, (1, 1),
-#                           kernel_initializer='he_normal',
-#                           name=conv_name_base + '2a')(input_tensor)
-#         x = layers.BatchNormalization(axis=bn_axis, name=bn_name_base + '2a')(x)
-#         x = layers.Activation('relu')(x)
-#
-#         x = layers.Conv2D(filters2, kernel_size,
-#                           padding='same',
-#                           kernel_initializer='he_normal',
-#                           name=conv_name_base + '2b')(x)
-#         x = layers.BatchNormalization(axis=bn_axis, name=bn_name_base + '2b')(x)
-#         x = layers.Activation('relu')(x)
-#
-#         x = layers.Conv2D(filters3, (1, 1),
-#                           kernel_initializer='he_normal',
-#                           name=conv_name_base + '2c')(x)
-#         x = layers.BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
-#
-#         x = layers.add([x, input_tensor])
-#         x = layers.Activation('relu')(x)
-#         return x
-#
+# # 使用
+# model = Linear()
+# optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
+# for i in range(100):
+#     with tf.GradientTape() as tape:
+#         y_pred = model(X)      # 调用模型 y_pred = model(X) 而不是显式写出 y_pred = a * X + b
+#         loss = tf.reduce_mean(tf.square(y_pred - y))
+#     grads = tape.gradient(loss, model.variables)    # 使用 model.variables 这一属性直接获得模型中的所有变量
+#     optimizer.apply_gradients(grads_and_vars=zip(grads, model.variables))
+# print(model.variables)
