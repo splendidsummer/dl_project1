@@ -36,7 +36,7 @@ wandb.init(
     entity=configs.TEAM_NAME,
     config=configs.wandb_config,
     sync_tensorboard=True,
-    name='cbr5_activation_3333_elu' + now,
+    name='cbr5_activation_3333_selu' + now,
     # notes = 'some notes related',
     ####
 )
@@ -106,7 +106,7 @@ else:
 
 print('Bulid Model!')
 # model = fc_model()
-model = cbr5_activation_3333(config)
+model = VannilaSikpModel(config)
 
 model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               optimizer=optimizer, metrics=["accuracy"])
@@ -131,7 +131,7 @@ print('training model')
 history = model.fit(X_train,
                     validation_data=X_val,
                     epochs=config.epochs,
-                    callbacks=[reduce_lr, wandb_callback],
+                    callbacks=[reduce_lr],
                     # callbacks=[early_callback, reduce_lr, wandb_callback],  # other callback?
                     )
 

@@ -42,7 +42,7 @@ data_classes = ['Oil on canvas', 'Graphite', 'Glass', 'Limestone', 'Bronze',
 wandb_config = {
     # "project_name": "CRB",
     "architecture": 'CRB',
-    "epochs": 100,
+    "epochs": 50,
     "batch_size": 128,
     'weight_decay': 0,
 
@@ -53,7 +53,7 @@ wandb_config = {
     "amsgrad": False,
     "momentum": 0.0,
     "nesterov": False,
-    "activation": 'elu',  # 'selu', 'leaky_relu'(small leak:0.01, large leak:0.2), 'gelu',
+    "activation": 'selu',  # 'selu', 'leaky_relu'(small leak:0.01, large leak:0.2), 'gelu',
     "initialization": "he_normal",
     "optimizer": 'adam',
     # "dropout": random.uniform(0.01, 0.80),
