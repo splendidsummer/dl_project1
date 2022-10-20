@@ -43,7 +43,7 @@ def fc_model():
 
         # data_augmentation,
 
-        layers.Resizing(32, 32),
+        layers.Resizing(32, 32),  # 64, 64
         layers.Rescaling(1. / 255),
 
         layers.Flatten(),
@@ -88,7 +88,7 @@ def cbr_model1():
 
         layers.Dropout(configs.wandb_config['drop_rate']),
         layers.Flatten(),
-        layers.Dense(128, activation='relu'),
+        layers.Dense(512, activation='relu'),
         layers.Dense(len(configs.data_classes)),
     ])
 

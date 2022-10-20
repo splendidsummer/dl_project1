@@ -1,5 +1,6 @@
 import tensorflow as tf
 from utils import *
+from cnn_models import *
 import configs
 from models import *
 from keras import layers
@@ -16,27 +17,14 @@ from keras.callbacks import EarlyStopping
 import wandb
 from wandb.keras import WandbCallback
 
-model = Sequential()
-model.add(Conv2D(32, kernel_size=(5, 5), activation='relu', kernel_initializer='he_normal', padding='same',
-                 input_shape=(256, 256, 3), data_format='channels_last'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-
-model.add(Conv2D(64, kernel_size=(3, 3), activation='relu', kernel_initializer='he_normal', padding='same'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-
-model.add(Conv2D(128, kernel_size=(3, 3), activation='relu', kernel_initializer='he_normal',padding='same'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-
-model.add(Flatten())
-model.add(Dense(512))
-model.add(Dense(29))
+model = cbr_model5_bottleneck()
 
 sweep_id = wandb.sweep(sweep=configs.sweep_configuration, project="sweeps_projects")
 
 
 def onerun():
     wandb.init(
-        project='my_first_sweep',
+        project='cbr_sweep',
     )
     config = wandb.config
     lr = config.learning_rate
@@ -53,7 +41,7 @@ def onerun():
     shuffle=False,
     seed=configs.seed,)
 
-    optimizer=Adam(lr=lr)
+    optimizer = Adam(lr=lr)
 
     model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               optimizer=optimizer, metrics=["accuracy"])
@@ -72,9 +60,4 @@ def onerun():
 
 
 wandb.agent(sweep_id=sweep_id, function=onerun)
-
-
-
-
-
 

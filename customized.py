@@ -28,4 +28,3 @@ class RandomGray(layers.Layer):
         if tf.random.uniform([]) < self.prob:
             img = tf.image.rgb_to_grayscale(img)
         return img
-

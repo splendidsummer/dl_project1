@@ -2,6 +2,7 @@ import tensorflow as tf
 from utils import *
 import configs
 from models import *
+from fc_models import *
 from keras import layers
 from keras import layers, Sequential
 from keras.models import Model
@@ -95,7 +96,8 @@ else:
     )
 
 print('Bulid Model!')
-model = fc_model()
+# model = fc_model()
+model = fc_model1()
 
 model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               optimizer=optimizer, metrics=["accuracy"])
@@ -118,9 +120,10 @@ print('training model')
 history = model.fit(X_train,
                     validation_data=X_val,
                     epochs=config.epochs,
-                    # callbacks=[early_callback, wandb_callback],  # other callback?
+                    callbacks=[early_callback, wandb_callback],  # other callback?
                     )
 
 print('Model trained in {:.1f}min'.format((time.time() - t0) / 60))
 model.save(now + '.h5')
+
 
